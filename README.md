@@ -86,3 +86,14 @@ Example with more options:
     export DATA_CITY_VAR="México D.F."
     export DATA_POSTAL_CODE_VAR="05023"
     export DATA_COUNTRY_VAR="Mexico"
+
+## Install
+
+Assuming you're on a mac, the best path to install is probably
+
+    $ go install github.com/pdk/sevarli@latest
+
+Binaries (for mac and other platforms) can be downloade from
+https://github.com/pdk/sevarli/releases, but for macs you'll need to go into
+system prefs and allow the unknown binary. (Click the question mark in the
+dialog that says you cannot run it.)

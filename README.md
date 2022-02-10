@@ -16,7 +16,7 @@ For example, given this input:
 
 and the command
 
-    $ sevarli -data example.data -pattern Antonio
+    sevarli -data example.data -pattern Antonio
 
 the output is
 
@@ -91,7 +91,7 @@ Example with more options:
 
 Assuming you're on a mac, the best path to install is probably
 
-    $ go install github.com/pdk/sevarli@latest
+    go install github.com/pdk/sevarli@latest
 
 Binaries (for mac and other platforms) can be downloade from
 https://github.com/pdk/sevarli/releases, but for macs you'll need to go into

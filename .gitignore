@@ -16,3 +16,6 @@
 
 # binary
 sevarli
+dist/
+
+set-github-token.sh

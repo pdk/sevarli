@@ -8,12 +8,12 @@ type Strings []string
 
 type CommandArgs struct {
 	export  bool
-	hide    Strings
 	pattern string
 	data    string
 	prefix  string
 	suffix  string
 	caps    bool
+	list    Strings
 }
 
 func (s *Strings) Set(value string) error {

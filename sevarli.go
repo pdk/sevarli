@@ -16,7 +16,7 @@ func main() {
 	flag.StringVar(&args.data, "data", "", "path to data file (otherwise read stdin)")
 	flag.BoolVar(&args.export, "export", false, "export the vars")
 	flag.StringVar(&args.pattern, "pattern", "", "pattern to search for (*required)")
-	flag.Var(&args.hide, "hide", "hide column(s) when listing")
+	flag.Var(&args.list, "list", "column(s) to show when listing")
 	flag.StringVar(&args.prefix, "prefix", "", "prefix variable name with given value")
 	flag.StringVar(&args.suffix, "suffix", "", "suffix variable name with given value")
 	flag.BoolVar(&args.caps, "caps", true, "convert names to caps")
@@ -51,13 +51,13 @@ func run(args CommandArgs) error {
 	}
 
 	if len(matched) == 0 {
-		printOptions(data[0], data[1:])
-		return fmt.Errorf("did not match any line")
+		printOptions(cols, data[0], data[1:], args.list)
+		return fmt.Errorf("%#v did not match any line", args.pattern)
 	}
 
 	if len(matched) != 1 {
-		printOptions(data[0], matched)
-		return fmt.Errorf("matched more than 1 line")
+		printOptions(cols, data[0], matched, args.list)
+		return fmt.Errorf("%#v matched more than 1 line", args.pattern)
 	}
 
 	for _, l := range matched {
@@ -67,11 +67,48 @@ func run(args CommandArgs) error {
 	return nil
 }
 
-func printOptions(header string, lines []string) {
-	fmt.Fprintln(os.Stderr, header)
-	for _, l := range lines {
-		fmt.Fprintln(os.Stderr, l)
+func printOptions(cols columns, header string, lines []string, list Strings) {
+
+	printOneRow(cols, header, list)
+	printOneRow(cols, strings.Repeat("-", cols[len(cols)-1].last-cols[0].first), list)
+
+	for _, line := range lines {
+		printOneRow(cols, line, list)
 	}
+}
+
+func printOneRow(cols columns, text string, list Strings) {
+
+	line := []rune(text)
+
+	for i, col := range cols {
+		if !showCol(col.name, list) {
+			continue
+		}
+		if i > 0 {
+			fmt.Fprintf(os.Stderr, "  ")
+		}
+
+		fmt.Fprintf(os.Stderr, "%-*s", col.width(), getColVal(line, col.first, col.last))
+	}
+	fmt.Fprintf(os.Stderr, "\n")
+}
+
+func showCol(name string, list Strings) bool {
+	if name == "password" {
+		return false
+	}
+	if len(list) == 0 {
+		return true
+	}
+
+	for _, each := range list {
+		if name == each {
+			return true
+		}
+	}
+
+	return false
 }
 
 func setCols(cols columns, data string, export bool, prefix, suffix string, caps bool) {
@@ -84,13 +121,22 @@ func setCols(cols columns, data string, export bool, prefix, suffix string, caps
 
 	for _, col := range cols {
 		name := fixName(col.name, caps)
-		r := col.last + 1
-		if r > len(datar) {
-			r = len(datar)
-		}
-		value := strings.TrimSpace(string(datar[col.first:r]))
+		value := getColVal(datar, col.first, col.last)
 		fmt.Printf("%s%s%s%s=\"%s\"\n", exp, prefix, name, suffix, value)
 	}
+}
+
+func getColVal(data []rune, first, last int) string {
+	f := min(first, len(data))
+	l := min(last, len(data))
+	return strings.TrimSpace(string(data[f:l]))
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func fixName(name string, caps bool) string {

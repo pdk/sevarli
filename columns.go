@@ -1,13 +1,18 @@
 package main
 
 import (
-	"strings"
+	"log"
 	"unicode/utf8"
 )
 
 type column struct {
-	name        string
-	first, last int
+	name  string
+	first int // first index of column (by rune)
+	last  int // last index+1 of column (by rune)
+}
+
+func (c column) width() int {
+	return c.last - c.first
 }
 
 type columns []column
@@ -16,45 +21,56 @@ func identifyColumns(lines []string) columns {
 
 	nonSpace := make([]bool, maxLen(lines))
 
+	// across all lines, identify which columns have non-space characters.
 	for _, l := range lines {
 		i := 0
 		for _, c := range l {
-			if c != ' ' && !nonSpace[i] {
+			if c != ' ' {
 				nonSpace[i] = true
 			}
 			i++
 		}
 	}
 
+	// mark any is-space column as not-is-space if only a single space.
+	// X.X => XXX
+	// X..X = X..X
 	for i, b := range nonSpace {
-		if !b && i > 0 && nonSpace[i-1] && i < len(nonSpace) && nonSpace[i+1] {
+		if !b && i > 0 && i < len(nonSpace)-1 && nonSpace[i-1] && nonSpace[i+1] {
 			nonSpace[i] = true
 		}
 	}
 
+	// identify first, last position of each "column".
+	// "last" position is index of first space after column.
+	firsts, lasts := []int{}, []int{}
+	wasNonSpace := false
+	for i := 0; i < len(nonSpace); i++ {
+		switch {
+		case !wasNonSpace && nonSpace[i]:
+			firsts = append(firsts, i)
+		case wasNonSpace && !nonSpace[i]:
+			lasts = append(lasts, i)
+		}
+		wasNonSpace = nonSpace[i]
+	}
+	if len(firsts) > len(lasts) {
+		lasts = append(lasts, len(nonSpace))
+	}
+	if len(firsts) != len(lasts) {
+		// bug should never happen
+		log.Fatalf("failed to identify columns for %#v", nonSpace)
+	}
+
+	// pull out names for columns from the first data line
 	headerLine := []rune(lines[0])
 	cols := columns{}
-	isSpace := true
-	first := 0
-	for p := 0; p < len(nonSpace); p++ {
-		if isSpace && nonSpace[p] {
-			first = p
-			isSpace = false
-			continue
-		}
-		if !isSpace && (!nonSpace[p] || p == len(nonSpace)-1) {
-			last := p - 1
-			if p == len(nonSpace)-1 {
-				last = p
-			}
-			col := column{
-				name:  strings.TrimSpace(string(headerLine[first : last+1])),
-				first: first,
-				last:  last,
-			}
-			cols = append(cols, col)
-			isSpace = true
-		}
+	for i := 0; i < len(firsts); i++ {
+		cols = append(cols, column{
+			first: firsts[i],
+			last:  lasts[i],
+			name:  getColVal(headerLine, firsts[i], lasts[i]),
+		})
 	}
 
 	return cols

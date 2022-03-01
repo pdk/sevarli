@@ -1,3 +1,3 @@
 module github.com/pdk/sevarli
 
-go 1.18
+go 1.17

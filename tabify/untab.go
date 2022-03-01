@@ -7,8 +7,8 @@ import (
 	"unicode/utf8"
 )
 
-// defaultBufferSize is the longest line we can handle
-const defaultBufferSize = 4096
+// bufferSize is the longest line we can handle
+const bufferSize = 4096
 
 // TabsToSpacesReader is a io.Reader that converts tabs to spaces. Note: Use
 // NewTabsToSpacesReader() to get an actually working instance.
@@ -24,7 +24,7 @@ func NewTabsToSpacesReader(input io.Reader) *TabsToSpacesReader {
 
 	return &TabsToSpacesReader{
 		scanner: bufio.NewScanner(input),
-		buffer:  make([]byte, defaultBufferSize),
+		buffer:  make([]byte, bufferSize),
 	}
 }
 

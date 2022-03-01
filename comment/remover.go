@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-const defaultBufferSize = 4096
+const bufferSize = 4096
 
 type RemoveCommentsReader struct {
 	scanner               *bufio.Scanner
@@ -26,7 +26,7 @@ func NewRemoveCommentsReader(input io.Reader, pattern string) (*RemoveCommentsRe
 
 	return &RemoveCommentsReader{
 		scanner: bufio.NewScanner(input),
-		buffer:  make([]byte, defaultBufferSize),
+		buffer:  make([]byte, bufferSize),
 		pattern: regex,
 	}, nil
 }

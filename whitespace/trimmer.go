@@ -8,8 +8,8 @@ import (
 	"unicode"
 )
 
-// defaultBufferSize is the longest line we can handle
-const defaultBufferSize = 4096
+// bufferSize is the longest line we can handle
+const bufferSize = 4096
 
 type TrimRightWhiteSpaceReader struct {
 	scanner               *bufio.Scanner
@@ -23,7 +23,7 @@ func NewTrimRightWhiteSpaceReader(input io.Reader) *TrimRightWhiteSpaceReader {
 
 	return &TrimRightWhiteSpaceReader{
 		scanner: bufio.NewScanner(input),
-		buffer:  make([]byte, defaultBufferSize),
+		buffer:  make([]byte, bufferSize),
 	}
 }
 
